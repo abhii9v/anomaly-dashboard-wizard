@@ -8,7 +8,9 @@ import {
   Bell,
   ChevronRight,
   Menu,
-  X
+  X,
+  AlertOctagon,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -156,6 +158,22 @@ export const SidebarNav = ({ className }: { className?: string }) => {
               >
                 Incident Manager
               </NavItem>
+              <NavItem 
+                to="/disaster-recovery" 
+                icon={<AlertOctagon className="h-5 w-5" />} 
+                isCollapsed={false}
+                onNavLinkClick={closeMobileMenu}
+              >
+                Disaster Recovery
+              </NavItem>
+              <NavItem 
+                to="/forecast" 
+                icon={<Calendar className="h-5 w-5" />} 
+                isCollapsed={false}
+                onNavLinkClick={closeMobileMenu}
+              >
+                High Forecast Days
+              </NavItem>
             </div>
           </div>
         </div>
@@ -214,6 +232,20 @@ export const SidebarNav = ({ className }: { className?: string }) => {
             isCollapsed={isCollapsed}
           >
             Incident Manager
+          </NavItem>
+          <NavItem 
+            to="/disaster-recovery" 
+            icon={<AlertOctagon className="h-5 w-5" />} 
+            isCollapsed={isCollapsed}
+          >
+            Disaster Recovery
+          </NavItem>
+          <NavItem 
+            to="/forecast" 
+            icon={<Calendar className="h-5 w-5" />} 
+            isCollapsed={isCollapsed}
+          >
+            High Forecast Days
           </NavItem>
         </div>
       </div>

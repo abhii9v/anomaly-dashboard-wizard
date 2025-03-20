@@ -9,6 +9,8 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import IncidentManager from "./pages/IncidentManager";
+import DisasterRecovery from "./pages/DisasterRecovery";
+import Forecast from "./pages/Forecast";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +36,16 @@ const App = () => (
           <Route path="/incidents" element={
             <MainLayout>
               <IncidentManager />
+            </MainLayout>
+          } />
+          <Route path="/disaster-recovery" element={
+            <MainLayout>
+              <DisasterRecovery />
+            </MainLayout>
+          } />
+          <Route path="/forecast" element={
+            <MainLayout>
+              <Forecast />
             </MainLayout>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
