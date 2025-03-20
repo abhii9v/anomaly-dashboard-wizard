@@ -135,7 +135,7 @@ export const SidebarNav = ({ className }: { className?: string }) => {
             </div>
             <div className="p-3">
               <NavItem 
-                to="/" 
+                to="/dashboard" 
                 icon={<LayoutDashboard className="h-5 w-5" />} 
                 isCollapsed={false}
                 onNavLinkClick={closeMobileMenu}
@@ -148,7 +148,7 @@ export const SidebarNav = ({ className }: { className?: string }) => {
                 isCollapsed={false}
                 onNavLinkClick={closeMobileMenu}
               >
-                Users
+                Monitoring Team
               </NavItem>
               <NavItem 
                 to="/incidents" 
@@ -213,7 +213,7 @@ export const SidebarNav = ({ className }: { className?: string }) => {
           "flex flex-col flex-1 py-3 px-2 overflow-y-auto"
         )}>
           <NavItem 
-            to="/" 
+            to="/dashboard" 
             icon={<LayoutDashboard className="h-5 w-5" />} 
             isCollapsed={isCollapsed}
           >
@@ -224,7 +224,7 @@ export const SidebarNav = ({ className }: { className?: string }) => {
             icon={<Users className="h-5 w-5" />} 
             isCollapsed={isCollapsed}
           >
-            Users
+            Monitoring Team
           </NavItem>
           <NavItem 
             to="/incidents" 
