@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Table, TableBody, TableCell, TableHead, 
   TableHeader, TableRow 
@@ -7,32 +7,66 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, MoreHorizontal } from "lucide-react";
+import { Search, Filter, MoreHorizontal, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
-// Generate sample user data
-const generateUsers = () => {
-  const users = [];
-  const statuses = ["active", "inactive", "pending"];
-  const roles = ["user", "admin", "editor"];
-  
-  for (let i = 1; i <= 10; i++) {
-    users.push({
-      id: i,
-      name: `User ${i}`,
-      email: `user${i}@example.com`,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      role: roles[Math.floor(Math.random() * roles.length)],
-      lastActive: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toLocaleDateString(),
-      anomalousActions: Math.floor(Math.random() * 10),
-    });
-  }
-  
-  return users;
-};
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
+  level: string;
+  contact: string;
+  lastActive: string;
+  anomalousActions: number;
+}
 
 const Users = () => {
-  const [users] = useState(generateUsers());
+  const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('users')
+          .select('*');
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Transform the data to match our User interface
+        const formattedUsers = data.map(user => ({
+          id: user.id,
+          name: user.name || 'Unknown User',
+          email: user.email || 'No email',
+          status: 'active', // Default as active since this isn't in the table
+          level: user.level || 'user',
+          contact: user.contact || 'No contact',
+          lastActive: user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown',
+          anomalousActions: Math.floor(Math.random() * 10), // Placeholder since this isn't in the table
+        }));
+        
+        setUsers(formattedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        toast({
+          title: "Error fetching users",
+          description: "Could not load users from the database.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [toast]);
   
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -87,7 +121,16 @@ const Users = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.length > 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center h-32">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mb-2"></div>
+                    <p className="text-muted-foreground">Loading users...</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
@@ -101,7 +144,7 @@ const Users = () => {
                       {user.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="capitalize">{user.role}</TableCell>
+                  <TableCell className="capitalize">{user.level}</TableCell>
                   <TableCell>{user.lastActive}</TableCell>
                   <TableCell>
                     {user.anomalousActions > 0 ? (
@@ -125,7 +168,10 @@ const Users = () => {
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
-                  No users found
+                  <div className="flex flex-col items-center justify-center">
+                    <AlertCircle className="h-5 w-5 mb-2 text-muted-foreground" />
+                    <p>No users found</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
