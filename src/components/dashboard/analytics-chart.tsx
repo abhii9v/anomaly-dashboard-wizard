@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   LineChart, 
@@ -13,86 +12,75 @@ import {
   Legend
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-
-// Generate sample data for clicks over time
-const generateClicksData = () => {
-  const data = [];
-  const now = new Date();
-  
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'short' });
-    
-    data.push({
-      date: `${day} ${month}`,
-      clicks: Math.floor(Math.random() * 500) + 100,
-      uniqueUsers: Math.floor(Math.random() * 200) + 50,
-    });
-  }
-  
-  return data;
-};
-
-// Generate sample data for ad spend
-const generateAdSpendData = () => {
-  const data = [];
-  const now = new Date();
-  
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'short' });
-    
-    data.push({
-      date: `${day} ${month}`,
-      spend: Math.floor(Math.random() * 1000) + 200,
-      impressions: Math.floor(Math.random() * 5000) + 1000,
-    });
-  }
-  
-  return data;
-};
+import { DailyAnalytics } from "@/services/analyticsService";
 
 interface AnalyticsChartProps {
   title: string;
   type: "clicks" | "adSpend";
   chartType?: "line" | "bar";
   className?: string;
+  data?: DailyAnalytics[];
+  isLoading?: boolean;
 }
 
 export const AnalyticsChart = ({ 
   title, 
   type, 
   chartType = "line",
-  className 
+  className,
+  data = [],
+  isLoading = false
 }: AnalyticsChartProps) => {
-  const [data, setData] = useState<any[]>([]);
   const [animateChart, setAnimateChart] = useState(false);
   
   useEffect(() => {
-    // Generate the data based on the chart type
-    const chartData = type === "clicks" ? generateClicksData() : generateAdSpendData();
-    setData([]);
+    // Only animate if we have data and it's not loading
+    if (data.length > 0 && !isLoading) {
+      // Small delay to allow the UI to render first
+      const timeout = setTimeout(() => {
+        setAnimateChart(true);
+      }, 300);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [data, isLoading]);
+
+  // Format the data for the charts
+  const formattedData = data.map(item => {
+    // Format date to display as day and month
+    const date = new Date(item.date);
+    const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })}`;
     
-    // Animate the chart data loading
-    const timeout = setTimeout(() => {
-      setData(chartData);
-      setAnimateChart(true);
-    }, 500);
-    
-    return () => clearTimeout(timeout);
-  }, [type]);
+    if (type === "clicks") {
+      return {
+        date: formattedDate,
+        clicks: item.total_clicks,
+        uniqueUsers: item.total_unique_users
+      };
+    } else {
+      return {
+        date: formattedDate,
+        spend: item.total_ad_spend,
+        impressions: item.total_impressions / 100 // Scale down for better visualization
+      };
+    }
+  });
+
+  // Function to get color based on retention value
+  const getColor = (value: number) => {
+    // Scale from light blue to dark blue based on retention percentage
+    const intensity = Math.floor((value / 100) * 255);
+    return `rgb(${255 - intensity}, ${255 - intensity}, 255)`;
+  };
 
   const renderChart = () => {
     if (chartType === "line") {
       return (
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
-            data={data}
+            data={formattedData}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -122,6 +110,7 @@ export const AnalyticsChart = ({
                 <Line 
                   type="monotone" 
                   dataKey="clicks" 
+                  name="Clicks" 
                   stroke="hsl(222, 47%, 11%)" 
                   strokeWidth={2} 
                   dot={{ stroke: 'hsl(222, 47%, 11%)', strokeWidth: 2, r: 4, fill: 'hsl(var(--card))' }}
@@ -133,6 +122,7 @@ export const AnalyticsChart = ({
                 <Line 
                   type="monotone" 
                   dataKey="uniqueUsers" 
+                  name="Unique Users"
                   stroke="hsl(215, 16%, 47%)" 
                   strokeWidth={2} 
                   strokeDasharray="5 5"
@@ -148,6 +138,7 @@ export const AnalyticsChart = ({
                 <Line 
                   type="monotone" 
                   dataKey="spend" 
+                  name="Ad Spend ($)"
                   stroke="hsl(208, 100%, 54%)" 
                   strokeWidth={2}
                   dot={{ stroke: 'hsl(208, 100%, 54%)', strokeWidth: 2, r: 4, fill: 'hsl(var(--card))' }}
@@ -159,6 +150,7 @@ export const AnalyticsChart = ({
                 <Line 
                   type="monotone" 
                   dataKey="impressions" 
+                  name="Impressions (x100)" 
                   stroke="hsl(142, 71%, 45%)" 
                   strokeWidth={2} 
                   strokeDasharray="5 5"
@@ -177,7 +169,7 @@ export const AnalyticsChart = ({
       return (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
-            data={data}
+            data={formattedData}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -206,6 +198,7 @@ export const AnalyticsChart = ({
               <>
                 <Bar 
                   dataKey="clicks" 
+                  name="Clicks"
                   fill="hsl(222, 47%, 11%)"
                   radius={[4, 4, 0, 0]}
                   isAnimationActive={animateChart}
@@ -214,6 +207,7 @@ export const AnalyticsChart = ({
                 />
                 <Bar 
                   dataKey="uniqueUsers" 
+                  name="Unique Users"
                   fill="hsl(215, 16%, 47%)"
                   radius={[4, 4, 0, 0]}
                   isAnimationActive={animateChart}
@@ -225,6 +219,7 @@ export const AnalyticsChart = ({
               <>
                 <Bar 
                   dataKey="spend" 
+                  name="Ad Spend ($)"
                   fill="hsl(208, 100%, 54%)"
                   radius={[4, 4, 0, 0]}
                   isAnimationActive={animateChart}
@@ -233,6 +228,7 @@ export const AnalyticsChart = ({
                 />
                 <Bar 
                   dataKey="impressions" 
+                  name="Impressions (x100)"
                   fill="hsl(142, 71%, 45%)"
                   radius={[4, 4, 0, 0]}
                   isAnimationActive={animateChart}
@@ -253,9 +249,13 @@ export const AnalyticsChart = ({
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        {data.length === 0 ? (
+        {isLoading ? (
           <div className="flex items-center justify-center h-[300px]">
             <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          </div>
+        ) : formattedData.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            <p>No data available</p>
           </div>
         ) : (
           renderChart()
