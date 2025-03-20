@@ -1,50 +1,28 @@
-
 import { useState } from "react";
+import { 
+  AlertTriangle,
+  Clock,
+  Filter,
+  CheckCircle
+} from "lucide-react";
 import { 
   Card, CardContent, CardDescription, 
   CardHeader, CardTitle 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  AlertTriangle,
-  Clock,
-  Shield,
-  CheckCircle,
-  XCircle,
-  Filter
-} from "lucide-react";
 import { DataCard } from "@/components/ui/data-card";
+import { 
+  useIncidents, 
+  useIncidentStatistics,
+  useUpdateIncidentStatus
+} from "@/hooks/use-incidents";
+import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-// Generate sample incidents
-const generateIncidents = () => {
-  const incidents = [];
-  const types = ["suspicious-login", "data-access", "api-abuse", "ddos-attempt"];
-  const severities = ["critical", "high", "medium", "low"];
-  const statuses = ["open", "investigating", "resolved", "false-positive"];
-  
-  for (let i = 1; i <= 6; i++) {
-    const type = types[Math.floor(Math.random() * types.length)];
-    const severity = severities[Math.floor(Math.random() * severities.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const detected = new Date(Date.now() - Math.floor(Math.random() * 86400000 * 5));
-    
-    incidents.push({
-      id: i,
-      title: `Incident #${i}: ${type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`,
-      type,
-      severity,
-      status,
-      detectedAt: detected.toLocaleString(),
-      description: `Detected unusual activity related to ${type.replace(/-/g, ' ')}.`,
-      affectedUsers: Math.floor(Math.random() * 20) + 1,
-    });
-  }
-  
-  return incidents;
-};
-
+// Function to get severity badge color
 const getSeverityColor = (severity: string) => {
   switch (severity) {
     case "critical":
@@ -75,45 +53,63 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const getIncidentIcon = (type: string) => {
-  switch (type) {
-    case "suspicious-login":
-      return <AlertTriangle className="h-5 w-5 text-amber-500" />;
-    case "data-access":
-      return <Shield className="h-5 w-5 text-purple-500" />;
-    case "api-abuse":
-      return <XCircle className="h-5 w-5 text-rose-500" />;
-    case "ddos-attempt":
-      return <AlertTriangle className="h-5 w-5 text-red-500" />;
-    default:
-      return <AlertTriangle className="h-5 w-5 text-amber-500" />;
-  }
-};
-
 const IncidentManager = () => {
-  const [incidents] = useState(generateIncidents());
   const [activeFilter, setActiveFilter] = useState("all");
+  const { toast } = useToast();
   
-  const filteredIncidents = activeFilter === "all" 
-    ? incidents 
-    : incidents.filter(incident => 
-        activeFilter === "open" 
-          ? incident.status === "open" || incident.status === "investigating"
-          : incident.status === activeFilter
-      );
-  
-  const openCount = incidents.filter(incident => 
-    incident.status === "open" || incident.status === "investigating"
-  ).length;
-  
-  const resolvedCount = incidents.filter(incident => 
-    incident.status === "resolved"
-  ).length;
-  
-  const falsePositiveCount = incidents.filter(incident => 
-    incident.status === "false-positive"
-  ).length;
-  
+  // Fetch incidents based on active filter
+  const { 
+    data: incidents, 
+    isLoading: isLoadingIncidents, 
+    error: incidentsError 
+  } = useIncidents(
+    activeFilter === "open" 
+      ? "open" 
+      : activeFilter === "resolved" 
+        ? "resolved" 
+        : activeFilter === "false-positive" 
+          ? "false-positive" 
+          : undefined
+  );
+
+  // Fetch incident statistics
+  const { 
+    data: statistics, 
+    isLoading: isLoadingStatistics 
+  } = useIncidentStatistics();
+
+  // Mutation hook for updating incident status
+  const updateIncidentStatus = useUpdateIncidentStatus();
+
+  // Handler for updating incident status
+  const handleStatusUpdate = async (id: number, newStatus: string) => {
+    try {
+      await updateIncidentStatus.mutateAsync({ id, status: newStatus });
+      toast({
+        title: "Incident Updated",
+        description: `Incident status updated to ${newStatus}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update incident status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle errors
+  if (incidentsError) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error Loading Incidents</AlertTitle>
+        <AlertDescription>
+          {incidentsError.message || "Unable to fetch incidents. Please try again later."}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -121,54 +117,49 @@ const IncidentManager = () => {
         <Button>Report Incident</Button>
       </div>
       
+      {/* Overview Cards */}
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <DataCard
-          title="Open Incidents"
-          icon={<Clock className="h-4 w-4" />}
-          className="animate-fade-in animate-delay-100"
-        >
-          <div className="text-2xl font-bold">{openCount}</div>
-          <div className="mt-2 text-xs text-muted-foreground">
-            {incidents.filter(i => i.status === "investigating").length} currently investigating
-          </div>
-        </DataCard>
-        
-        <DataCard
-          title="Critical Incidents"
-          icon={<AlertTriangle className="h-4 w-4" />}
-          className="animate-fade-in animate-delay-200"
-        >
-          <div className="text-2xl font-bold">
-            {incidents.filter(i => i.severity === "critical").length}
-          </div>
-          <div className="mt-2 text-xs text-muted-foreground">
-            {incidents.filter(i => i.severity === "critical" && (i.status === "open" || i.status === "investigating")).length} need attention
-          </div>
-        </DataCard>
-        
-        <DataCard
-          title="Resolved"
-          icon={<CheckCircle className="h-4 w-4" />}
-          className="animate-fade-in animate-delay-300"
-        >
-          <div className="text-2xl font-bold">{resolvedCount}</div>
-          <div className="mt-2 text-xs text-muted-foreground">
-            In the last 30 days
-          </div>
-        </DataCard>
-        
-        <DataCard
-          title="False Positives"
-          icon={<XCircle className="h-4 w-4" />}
-          className="animate-fade-in animate-delay-400"
-        >
-          <div className="text-2xl font-bold">{falsePositiveCount}</div>
-          <div className="mt-2 text-xs text-muted-foreground">
-            {Math.round((falsePositiveCount / incidents.length) * 100)}% of total incidents
-          </div>
-        </DataCard>
+        {isLoadingStatistics ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className={`animate-delay-${i * 100}`}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            <DataCard
+              title="Total Incidents"
+              value={statistics?.total.toString() || "0"}
+              icon={<AlertTriangle className="h-4 w-4" />}
+              className="animate-delay-100"
+            />
+            <DataCard
+              title="Open Incidents"
+              value={statistics?.open.toString() || "0"}
+              icon={<Clock className="h-4 w-4" />}
+              className="animate-delay-200"
+            />
+            <DataCard
+              title="Resolved"
+              value={statistics?.resolved.toString() || "0"}
+              icon={<Clock className="h-4 w-4" />}
+              className="animate-delay-300"
+            />
+            <DataCard
+              title="False Positives"
+              value={statistics?.falsePositives.toString() || "0"}
+              icon={<Clock className="h-4 w-4" />}
+              className="animate-delay-400"
+            />
+          </>
+        )}
       </div>
       
+      {/* Filter Buttons */}
       <div className="flex gap-3 items-center flex-wrap">
         <Button 
           variant={activeFilter === "all" ? "default" : "outline"} 
@@ -203,58 +194,115 @@ const IncidentManager = () => {
         </Button>
       </div>
       
+      {/* Incidents Grid */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {filteredIncidents.map((incident, index) => (
-          <Card 
-            key={incident.id}
-            className={cn(
-              "transition-all duration-300 hover:shadow-md",
-              "animate-fade-in",
-              {
-                "animate-delay-100": index % 3 === 0,
-                "animate-delay-200": index % 3 === 1,
-                "animate-delay-300": index % 3 === 2,
-              }
-            )}
-          >
-            <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
-              <div>
-                <CardTitle className="text-base font-medium">
-                  {incident.title}
-                </CardTitle>
-                <CardDescription className="flex items-center mt-1">
-                  <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                  <span>{incident.detectedAt}</span>
-                </CardDescription>
-              </div>
-              {getIncidentIcon(incident.type)}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">{incident.description}</p>
-              
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className={getSeverityColor(incident.severity)}>
-                  {incident.severity}
-                </Badge>
-                <Badge variant="outline" className={getStatusColor(incident.status)}>
-                  {incident.status}
-                </Badge>
-                <Badge variant="outline">
-                  {incident.affectedUsers} affected user{incident.affectedUsers > 1 ? 's' : ''}
-                </Badge>
-              </div>
-              
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm">Details</Button>
-                {(incident.status === "open" || incident.status === "investigating") && (
-                  <Button size="sm">Investigate</Button>
+        {isLoadingIncidents ? (
+          // Loading state
+          <>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card 
+                key={i} 
+                className={cn(
+                  "transition-all duration-300 hover:shadow-md",
+                  "animate-fade-in",
+                  {
+                    "animate-delay-100": i % 3 === 0,
+                    "animate-delay-200": i % 3 === 1,
+                    "animate-delay-300": i % 3 === 2,
+                  }
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {filteredIncidents.length === 0 && (
+              >
+                <CardContent className="p-6">
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : incidents && incidents.length > 0 ? (
+          incidents.map((incident, index) => (
+            <Card 
+              key={incident.id} 
+              className={cn(
+                "transition-all duration-300 hover:shadow-md",
+                "animate-fade-in",
+                {
+                  "animate-delay-100": index % 3 === 0,
+                  "animate-delay-200": index % 3 === 1,
+                  "animate-delay-300": index % 3 === 2,
+                }
+              )}
+            >
+              <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
+                <div>
+                  <CardTitle className="text-base font-medium">
+                    {incident.title}
+                  </CardTitle>
+                  <CardDescription className="flex items-center mt-1">
+                    <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+                    <span>{new Date(incident.detected_at).toLocaleString()}</span>
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Badge variant="outline" className={getSeverityColor(incident.severity)}>
+                    {incident.severity}
+                  </Badge>
+                  <Badge variant="outline" className={getStatusColor(incident.status)}>
+                    {incident.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {incident.description}
+                </p>
+                
+                <div className="flex justify-between items-center">
+                  <Badge variant="outline">
+                    {incident.affected_users ? 
+                      `${incident.affected_users} affected user${incident.affected_users > 1 ? 's' : ''}` 
+                      : 'No users affected'}
+                  </Badge>
+                  
+                  {incident.financial_loss && (
+                    <div className="text-sm font-medium text-red-600">
+                      ${incident.financial_loss.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex justify-end gap-2 pt-2">
+                  {(incident.status === "open" || incident.status === "investigating") && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleStatusUpdate(incident.id, "investigating")}
+                      >
+                        Investigate
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleStatusUpdate(incident.id, "resolved")}
+                      >
+                        Resolve
+                      </Button>
+                    </>
+                  )}
+                  {incident.status === "resolved" && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleStatusUpdate(incident.id, "false-positive")}
+                    >
+                      Mark as False Positive
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          // No incidents found
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center p-10 text-center">
               <CheckCircle className="h-12 w-12 text-emerald-500 mb-4" />
