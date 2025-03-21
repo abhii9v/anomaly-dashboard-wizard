@@ -73,6 +73,7 @@ export type Database = {
           ad_item_id: number
           created_at: string | null
           date_time: string
+          forecast_type: string | null
           forecast_value: number
           id: number
         }
@@ -80,6 +81,7 @@ export type Database = {
           ad_item_id: number
           created_at?: string | null
           date_time: string
+          forecast_type?: string | null
           forecast_value: number
           id?: number
         }
@@ -87,6 +89,7 @@ export type Database = {
           ad_item_id?: number
           created_at?: string | null
           date_time?: string
+          forecast_type?: string | null
           forecast_value?: number
           id?: number
         }
