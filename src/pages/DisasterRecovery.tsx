@@ -24,13 +24,13 @@ import { Button } from "@/components/ui/button";
 const incidents = [
   {
     id: 1,
-    title: "Database Server Outage",
-    description: "Primary database server cluster went offline due to power failure at the data center",
-    date: "2023-10-15",
+    title: "Suspicious Login Attempts",
+    description: "Multiple failed login attempts detected from unusual IP ranges",
+    date: "2025-03-19",
     time: "14:22:30",
     duration: "3h 45m",
     status: "resolved",
-    financialLoss: 12500,
+    financialLoss: 0,
     severity: "high",
     nature: "technical",
     affectedSystems: ["Ad Delivery", "Reporting", "Analytics"],
@@ -42,10 +42,10 @@ const incidents = [
       { time: "03:45", stage: "Full Recovery", progress: 100 },
     ],
     escalationLog: [
-      { time: "00:05", level: "L1", user: "Sarah Johnson", action: "Initial alert acknowledged" },
-      { time: "00:35", level: "L2", user: "Michael Rodriguez", action: "Escalated to engineering team" },
-      { time: "01:00", level: "L3", user: "David Chen", action: "Ads paused for affected systems" },
-      { time: "03:30", level: "L3", user: "David Chen", action: "Ads resumed after stability confirmation" }
+      { time: "00:05", level: "L1", user: "Rahul Raj Singh", action: "Initial alert acknowledged" },
+      { time: "00:35", level: "L2", user: "Cristopher Manriquez", action: "Escalated to engineering team" },
+      { time: "01:00", level: "L3", user: "Shobhit Khandelwal", action: "Ads paused for affected systems" },
+      { time: "03:30", level: "L3", user: "Sandeep Chandrashekhar", action: "Ads resumed after stability confirmation" }
     ],
     recommendations: [
       "Implement redundant power systems at data center",
@@ -55,8 +55,8 @@ const incidents = [
   },
   {
     id: 2,
-    title: "Ad Serving API Failure",
-    description: "Critical failure in ad serving API causing no ads to be displayed for premium campaigns",
+    title: "RDS Issue",
+    description: "All platforms cannot connect to postgres database",
     date: "2023-11-02",
     time: "09:17:45",
     duration: "1h 15m",
@@ -73,10 +73,10 @@ const incidents = [
       { time: "01:15", stage: "Full Recovery", progress: 100 },
     ],
     escalationLog: [
-      { time: "00:03", level: "L1", user: "Emily Wilson", action: "Initial alert acknowledged" },
-      { time: "00:20", level: "L2", user: "Michael Rodriguez", action: "Escalated to API team" },
-      { time: "00:35", level: "L3", user: "David Chen", action: "Ads paused for affected campaigns" },
-      { time: "01:10", level: "L3", user: "David Chen", action: "Ads resumed after API stability confirmed" }
+      { time: "00:05", level: "L1", user: "Rahul Raj Singh", action: "Initial alert acknowledged" },
+      { time: "00:35", level: "L2", user: "Cristopher Manriquez", action: "Escalated to engineering team" },
+      { time: "01:00", level: "L3", user: "Shobhit Khandelwal", action: "Ads paused for affected systems" },
+      { time: "03:30", level: "L3", user: "Sandeep Chandrashekhar", action: "Ads resumed after stability confirmation" }
     ],
     recommendations: [
       "Implement enhanced monitoring for API endpoints",
@@ -86,7 +86,7 @@ const incidents = [
   },
   {
     id: 3,
-    title: "Data Pipeline Failure",
+    title: "Data Platform Not Responding",
     description: "ETL pipeline for campaign performance metrics failed causing reporting delays",
     date: "2023-11-12",
     time: "02:45:10",
@@ -104,9 +104,8 @@ const incidents = [
       { time: "05:30", stage: "Full Recovery", progress: 100 },
     ],
     escalationLog: [
-      { time: "00:10", level: "L1", user: "Sarah Johnson", action: "Initial alert acknowledged" },
-      { time: "01:15", level: "L2", user: "Jennifer Lee", action: "Escalated to data engineering" },
-      { time: "03:00", level: "L2", user: "Jennifer Lee", action: "Ad delivery unaffected, monitoring only" }
+      { time: "00:05", level: "L1", user: "Rahul Raj Singh", action: "Initial alert acknowledged" },
+      { time: "03:00", level: "L2", user: "Cristopher Manriquez", action: "Ad delivery unaffected, monitoring only" }
     ],
     recommendations: [
       "Implement data validation checks at each pipeline stage",
@@ -116,8 +115,8 @@ const incidents = [
   },
   {
     id: 4,
-    title: "Authentication Service Disruption",
-    description: "User authentication service experienced intermittent failures affecting some campaign managers",
+    title: "Ad Serving API Failure",
+    description: "Critical failure in ad serving API causing no ads to be displayed for premium campaigns",
     date: "2023-11-25",
     time: "11:33:22",
     duration: "2h 10m",
@@ -133,9 +132,10 @@ const incidents = [
       { time: "02:10", stage: "Full Recovery", progress: 100 },
     ],
     escalationLog: [
-      { time: "00:05", level: "L1", user: "Emily Wilson", action: "Initial alert acknowledged" },
-      { time: "00:40", level: "L2", user: "Michael Rodriguez", action: "Escalated to auth team" },
-      { time: "01:20", level: "L2", user: "Michael Rodriguez", action: "Ad delivery unaffected, monitoring only" }
+      { time: "00:05", level: "L1", user: "Rahul Raj Singh", action: "Initial alert acknowledged" },
+      { time: "00:35", level: "L2", user: "Cristopher Manriquez", action: "Escalated to engineering team" },
+      { time: "01:00", level: "L3", user: "Shobhit Khandelwal", action: "Ads paused for affected systems" },
+      { time: "03:30", level: "L3", user: "Sandeep Chandrashekhar", action: "Ads resumed after stability confirmation" }
     ],
     recommendations: [
       "Implement JWT token caching mechanism",

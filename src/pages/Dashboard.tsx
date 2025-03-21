@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { AlertDemoButton } from '@/components/dashboard/alert-demo-button';
 import { 
   DollarSign, 
   AlertTriangle, 
@@ -140,6 +141,9 @@ const Dashboard = () => {
               <SelectItem value="30d">Last 30 Days</SelectItem>
             </SelectContent>
           </Select>
+          <div> 
+            <AlertDemoButton /> 
+          </div>
           <div className="text-sm text-muted-foreground">
             Last updated: {new Date().toLocaleString()}
           </div>
