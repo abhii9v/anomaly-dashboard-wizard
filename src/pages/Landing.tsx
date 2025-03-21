@@ -46,7 +46,7 @@ const LandingPage = () => {
           <div className="relative">
             <div className="bg-blue-100 rounded-2xl p-4 shadow-xl">
               <img 
-                src="/placeholder.svg" 
+                src="/img.png" 
                 alt="Anomaly detection dashboard preview" 
                 className="w-full h-auto rounded-lg shadow-sm"
               />
@@ -145,13 +145,6 @@ const LandingPage = () => {
               </ol>
             </div>
             
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <img 
-                src="/placeholder.svg" 
-                alt="Anomaly detection process" 
-                className="w-full h-auto rounded-lg"
-              />
-            </div>
           </div>
         </div>
       </section>
