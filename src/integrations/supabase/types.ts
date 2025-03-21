@@ -9,6 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ad_item_performance_hourly: {
+        Row: {
+          ad_item_bid: number
+          ad_item_id: number
+          ad_type: string
+          advertiser_id: number
+          campaign_id: number | null
+          date: string
+          date_time: string
+          hour_of_day: number
+          id: number
+          total_budget_spent: number
+          total_clicks: number
+          total_impressions: number
+          updated_at: string
+          wallet_id: number
+        }
+        Insert: {
+          ad_item_bid: number
+          ad_item_id: number
+          ad_type: string
+          advertiser_id: number
+          campaign_id?: number | null
+          date: string
+          date_time: string
+          hour_of_day: number
+          id: number
+          total_budget_spent?: number
+          total_clicks?: number
+          total_impressions?: number
+          updated_at?: string
+          wallet_id: number
+        }
+        Update: {
+          ad_item_bid?: number
+          ad_item_id?: number
+          ad_type?: string
+          advertiser_id?: number
+          campaign_id?: number | null
+          date?: string
+          date_time?: string
+          hour_of_day?: number
+          id?: number
+          total_budget_spent?: number
+          total_clicks?: number
+          total_impressions?: number
+          updated_at?: string
+          wallet_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_item_performance_hourly_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_spend_forecasts: {
+        Row: {
+          ad_item_id: number
+          created_at: string | null
+          date_time: string
+          forecast_value: number
+          id: number
+        }
+        Insert: {
+          ad_item_id: number
+          created_at?: string | null
+          date_time: string
+          forecast_value: number
+          id?: number
+        }
+        Update: {
+          ad_item_id?: number
+          created_at?: string | null
+          date_time?: string
+          forecast_value?: number
+          id?: number
+        }
+        Relationships: []
+      }
       ad_spend_metrics: {
         Row: {
           anomaly: boolean | null
