@@ -258,7 +258,10 @@ export async function fetchPerformanceWithForecasts(
     };
   });
   
-  return combinedData;
+  // Sort by date_time (most recent first)
+  return combinedData.sort((a, b) => 
+    new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
+  );
 }
 
 /**
@@ -321,20 +324,100 @@ export async function getAnomalyStatistics(
   mediumSeverity: number;
   lowSeverity: number;
   potentialLostRevenue: number;
+  anomalyPercentage: number;
+  averageDeviation: number;
 }> {
-  const anomalies = await fetchPerformanceWithForecasts(
+  const combinedData = await fetchPerformanceWithForecasts(
     undefined,
     startDateTime,
     endDateTime
   );
   
-  const detectedAnomalies = anomalies.filter(a => a.is_anomaly);
+  const detectedAnomalies = combinedData.filter(a => a.is_anomaly);
+  
+  // Calculate average deviation across all anomalies
+  const totalDeviation = detectedAnomalies.reduce(
+    (sum, a) => sum + a.percentage_difference, 
+    0
+  );
+  
+  const averageDeviation = detectedAnomalies.length > 0 
+    ? totalDeviation / detectedAnomalies.length 
+    : 0;
+  
+  // Calculate anomaly percentage (what % of data points are anomalous)
+  const anomalyPercentage = combinedData.length > 0 
+    ? (detectedAnomalies.length / combinedData.length) * 100 
+    : 0;
   
   return {
     totalAnomalies: detectedAnomalies.length,
     highSeverity: detectedAnomalies.filter(a => a.severity === 'high').length,
     mediumSeverity: detectedAnomalies.filter(a => a.severity === 'medium').length,
     lowSeverity: detectedAnomalies.filter(a => a.severity === 'low').length,
-    potentialLostRevenue: detectedAnomalies.reduce((sum, a) => sum + Math.abs(a.difference), 0)
+    potentialLostRevenue: detectedAnomalies.reduce((sum, a) => sum + Math.abs(a.difference), 0),
+    anomalyPercentage,
+    averageDeviation
+  };
+}
+
+/**
+ * Gets summary of recent anomalies for a specific ad item or campaign
+ */
+export async function getAnomalySummary(
+  adItemId?: number,
+  campaignId?: number,
+  days = 7
+): Promise<{
+  recentAnomalies: number;
+  mostRecentTimestamp: string | null;
+  mostSevereLevel: 'none' | 'L1' | 'L2' | 'L3';
+  isCurrentlyAnomalous: boolean;
+}> {
+  // Calculate start date
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  // Get data
+  const combinedData = await fetchPerformanceWithForecasts(
+    campaignId,
+    startDate.toISOString(),
+    new Date().toISOString()
+  );
+  
+  // Filter for specific ad item if provided
+  const filteredData = adItemId 
+    ? combinedData.filter(d => d.ad_item_id === adItemId)
+    : combinedData;
+  
+  const anomalies = filteredData.filter(d => d.is_anomaly);
+  
+  // Find most recent anomaly
+  const mostRecent = anomalies.length > 0 ? anomalies[0] : null;
+  
+  // Determine most severe level
+  let mostSevereLevel: 'none' | 'L1' | 'L2' | 'L3' = 'none';
+  if (anomalies.some(a => a.threshold_exceeded === 'L3')) {
+    mostSevereLevel = 'L3';
+  } else if (anomalies.some(a => a.threshold_exceeded === 'L2')) {
+    mostSevereLevel = 'L2';
+  } else if (anomalies.some(a => a.threshold_exceeded === 'L1')) {
+    mostSevereLevel = 'L1';
+  }
+  
+  // Check if most recent data point is anomalous (consider data from last hour)
+  const lastHour = new Date();
+  lastHour.setHours(lastHour.getHours() - 1);
+  const recentData = filteredData.filter(d => 
+    new Date(d.date_time) >= lastHour
+  );
+  
+  const isCurrentlyAnomalous = recentData.some(d => d.is_anomaly);
+  
+  return {
+    recentAnomalies: anomalies.length,
+    mostRecentTimestamp: mostRecent?.date_time || null,
+    mostSevereLevel,
+    isCurrentlyAnomalous
   };
 }
